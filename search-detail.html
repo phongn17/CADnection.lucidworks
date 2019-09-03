@@ -1,0 +1,123 @@
+<!-- --------------------------------------------------------------------- -->
+<!-- Build the data model -->
+<!-- --------------------------------------------------------------------- -->
+<search:platform var="platform" conf="platforms.fusion.data"></search:platform>
+
+<!-- Retrieve the main doc to display -->
+<search:query var="query" parameters="*" facets="" results-per-page="1">
+    <query:filter field="id" value="{{params.id}}"></query:filter>
+</search:query>
+
+<!-- Send query to platform and retrieve documents back -->
+<search:response var="response" platform="platform" query="query">
+    <widget:spinner></widget:spinner>
+</search:response>
+
+<!-- Multiquery: suggestions for the item -->
+<lifecycle:required object="response">
+    
+    <search:query var="suggestionQuery" facets="" results-per-page="4">
+        <query:filter field="type_s" value="{{response | result | field:'type_s' | actualValue}}"></query:filter>
+    </search:query>
+
+    <search:response var="suggestionResp" platform="platform" query="suggestionQuery">
+        <widget:spinner></widget:spinner>
+    </search:response>
+
+</lifecycle:required>
+
+<!-- Define the view -->
+
+<helper:title title="{{(result | field:'name_t' | actualValue)}}"></helper:title>
+
+<!-- HEADER -->
+<layout:include file="views/partials/header.tpl.html" action="search"></layout:include>
+
+<!-- CONTENT -->
+<layout:animate animation="animate-fadeInUp" on="response">
+    <layout:box styling="bg-paper">
+        <layout:grid>
+
+            <!-- Main content -->
+            <layout:block lg="1-2">
+                <layout:box>
+                    <layout:grid>
+                        <!-- Page Title -->
+                        <layout:block>
+                            <layout:box styling="bg-paper-light center-content">
+                                <h1>{{(response |result | field:'name_t' | actualValue)}}</h1>
+                            </layout:box>
+                        </layout:block>
+
+                        <!-- Product Image -->
+                        <layout:block sm="1-2" padding-left="1" padding-right="1" padding-top="1">
+                            <layout:box styling="bg-paper-light center-content">
+                                <img src="{{(response | result | field:'image_s' | actualValue)}}" width="100%" style="object-fit: contain; max-height: 300px" />
+                            </layout:box>
+                        </layout:block>
+
+                        <!-- Product Info -->
+                        <layout:block sm="1-2" padding-left="1" padding-right="1" padding-top="1">
+                            <search:result-list response="response">
+                                <search:result>
+                                    <layout:box styling="center-content bg-paper-light">
+                                        <layout:block>
+                                            <search:field name="description_s" styling="description" max-characters="150" default-value="&lt;i&gt;No description&lt;/i&gt;"></search:field>
+                                        </layout:block>
+                                        <layout:block>
+                                            <search:field name="salePrice_d" styling="label-left" label="On Sale" prefix="$"></search:field>
+                                        </layout:block>
+                                    </layout:box>
+                                </search:result>
+                            </search:result-list>
+                        </layout:block>
+                    </layout:grid>
+                </layout:box>
+            </layout:block>
+
+            <!-- Suggestions: suggests -->
+            <layout:block lg="1-2">
+                <layout:box>
+                    <layout:grid>
+
+                        <layout:block padding-bottom="1">
+                            <layout:box styling="bg-paper-light center-content">
+                                <h2>Similar items of {{(response | result | field:'name_t' | actualValue)}}:</h2>
+                            </layout:box>
+                        </layout:block>
+
+                        <layout:block>
+                            <search:result-list response="suggestionResp" styling="cards-md-2">
+                                <search:result>
+                                    <layout:grid>
+
+                                        <layout:block lg="1-2">
+                                            <img src="{{ result | field:'image_s' | actualValue}}" />
+                                        </layout:block>
+
+                                        <layout:block lg="1-2">
+                                            <layout:grid>
+
+                                                <layout:block styling="center-content">
+                                                    <search:field name="name_t" styling="title" url="#/search/{{result.id}}"></search:field>
+                                                </layout:block>
+
+                                                <layout:block>
+                                                    <search:field name="description_s" styling="description" max-characters="150" default-value="&lt;i&gt;No description&lt;/i&gt;"></search:field>
+                                                    <search:field name="salePrice_d" styling="label-inline" label="On Sale"></search:field>
+                                                </layout:block>
+
+                                            </layout:grid>
+                                        </layout:block>
+
+                                    </layout:grid>
+                                </search:result>
+                            </search:result-list>
+                        </layout:block>
+
+                    </layout:grid>
+                </layout:box>
+            </layout:block>
+        </layout:grid>
+    </layout:box>
+</layout:animate>
