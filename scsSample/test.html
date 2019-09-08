@@ -30,22 +30,53 @@
 	}
 </style>
 <script type="text/javascript">
+	function getParams(query) {
+		let vars = query.split("&");
+		let params = {};
+		for (let idx = 0; idx < vars.length; idx++) {
+			let pair = vars[idx].split("=");
+			if (pair.length < 2) {
+				continue;
+			}
+			let key = decodeURIComponent(pair[0]);
+			var value = decodeURIComponent(pair[1]);
+			// If first entry with this name
+			if (typeof params[key] === "undefined") {
+				params[key] = decodeURIComponent(value);
+				// If second entry with this name
+			} else if (typeof params[key] === "string") {
+				let arr = [params[key], decodeURIComponent(value)];
+				params[key] = arr;
+				// If third or later entry with this name
+			} else {
+				params[key].push(decodeURIComponent(value));
+			}
+		}
+		return params;
+	}
+
 	let viewer;
 	window.onload = () => {
-		viewer = new Communicator.WebViewer({
-			containerId: "myContainer",
-			endpointUri: "models/microengine.scs"
-		});
-		ui = new Communicator.Ui.Desktop.DesktopUi(viewer, Communicator.ScreenConfiguration.Desktop);
-		viewer.start();
-		viewer.setCallbacks({
-			modelStructureReady: () => {
-				let axes = viewer.view.getAxisTriad();
-				let navCube = viewer.view.getNavCube();
-				axes.disable();
-				navCube.disable();
-			}
-		})
+		let query = window.location.search.substring(1);
+		let params = getParams(query);
+		if (!!params['sc']) {
+			viewer = new Communicator.WebViewer({
+				containerId: "myContainer",
+				endpointUri: params['sc']
+			});
+			ui = new Communicator.Ui.Desktop.DesktopUi(viewer, Communicator.ScreenConfiguration.Desktop);
+			viewer.start();
+			viewer.setCallbacks({
+				modelStructureReady: () => {
+					let axes = viewer.view.getAxisTriad();
+					let navCube = viewer.view.getNavCube();
+					axes.disable();
+					navCube.disable();
+				}
+			})
+		} else {
+			console.error('There is no sc param');
+		}
 	};
 </script>
 
